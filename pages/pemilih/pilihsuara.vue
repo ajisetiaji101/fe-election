@@ -113,6 +113,7 @@ const confirmCoblos = async () => {
             headers: {
                 'Content-Type': 'application/json',
             },
+            timeout: 7200000,
         });
 
         if (data.value?.status !== 201) {

@@ -1,6 +1,5 @@
 export default defineEventHandler(async (event) => {
     try {
-
         const body = await readBody(event);
 
         // Generate a unique timestamp for idempotency
@@ -9,12 +8,22 @@ export default defineEventHandler(async (event) => {
         // Define the API endpoint (configurable for different environments)
         const API_URL = `http://localhost:8081/votes`;
 
-        // Send POST request to the external API
-        const response = await fetch(API_URL, {
+        // Function to fetch with timeout
+        const fetchWithTimeout = (url, options, timeout = 7200000) => { // 7200000 ms = 2 hours
+            return Promise.race([
+                fetch(url, options),
+                new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Request timed out')), timeout)
+                )
+            ]);
+        };
+
+        // Send POST request to the external API with timeout
+        const response = await fetchWithTimeout(API_URL, {
             method: 'POST',
             headers: {
-                // Note: 'Content-Type' for multipart form data is typically set automatically by the fetch API.
                 'Idempotency-Key': timestamp.toString(),
+                'Content-Type': 'application/json', // Ensure the content type is set
             },
             body: JSON.stringify(body),
         });
@@ -24,7 +33,6 @@ export default defineEventHandler(async (event) => {
 
         // Check if the response is not successful
         if (response.status !== 201) {
-
             console.log("masuk sini");
 
             const errorMessage = await response.text();
@@ -37,7 +45,6 @@ export default defineEventHandler(async (event) => {
             };
         }
 
-
         return {
             status: response.status,
             response: {
@@ -45,8 +52,17 @@ export default defineEventHandler(async (event) => {
             },
         };
     } catch (error) {
-
         console.log("masuk sini");
+
+        // Check if the error is a timeout error
+        if (error.message === 'Request timed out') {
+            return {
+                status: 408, // Request Timeout
+                response: {
+                    message: "The request timed out. Please try again later.",
+                },
+            };
+        }
 
         console.error("An unexpected error occurred:", error);
         return {
@@ -56,5 +72,4 @@ export default defineEventHandler(async (event) => {
             },
         };
     }
-}
-);
+});
