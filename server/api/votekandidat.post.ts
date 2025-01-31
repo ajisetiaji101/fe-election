@@ -1,25 +1,47 @@
 export default defineEventHandler(async (event) => {
+    const MAX_RETRIES = 3; // Maximum number of retries
+    const RETRY_DELAY = 2000; // Delay between retries in milliseconds
+
+    const body = await readBody(event);
+
+    // Generate a unique timestamp for idempotency
+    const timestamp = Date.now();
+
+    // Define the API endpoint (configurable for different environments)
+    const API_URL = `http://localhost:8081/votes`;
+
+    // Function to send POST request with retries
+    const sendPostRequest = async (url, options, retries) => {
+        for (let attempt = 0; attempt < retries; attempt++) {
+            try {
+                const response = await fetch(url, options);
+
+                // Log response status for debugging
+                console.log(`API response status: ${response.status}`);
+
+                // Check if the response is successful
+                if (response.status === 201) {
+                    return response; // Return successful response
+                } else {
+                    const errorMessage = await response.text();
+                    console.error("API error response:", errorMessage);
+                    throw new Error(errorMessage); // Throw error to trigger retry
+                }
+            } catch (error) {
+                console.error(`Attempt ${attempt + 1} failed:`, error.message);
+                if (attempt < retries - 1) {
+                    // Wait before retrying
+                    await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+                } else {
+                    throw error; // Rethrow error if out of retries
+                }
+            }
+        }
+    };
+
     try {
-        const body = await readBody(event);
-
-        // Generate a unique timestamp for idempotency
-        const timestamp = Date.now();
-
-        // Define the API endpoint (configurable for different environments)
-        const API_URL = `http://localhost:8081/votes`;
-
-        // Function to fetch with timeout
-        const fetchWithTimeout = (url, options, timeout = 7200000) => { // 7200000 ms = 2 hours
-            return Promise.race([
-                fetch(url, options),
-                new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error('Request timed out')), timeout)
-                )
-            ]);
-        };
-
-        // Send POST request to the external API with timeout
-        const response = await fetchWithTimeout(API_URL, {
+        // Send POST request to the external API with retries
+        const response = await sendPostRequest(API_URL, {
             method: 'POST',
             headers: {
                 'Idempotency-Key': timestamp.toString(),
@@ -27,23 +49,6 @@ export default defineEventHandler(async (event) => {
             },
             body: JSON.stringify(body),
         });
-
-        // Log response status for debugging
-        console.log(`API response status: ${response.status}`);
-
-        // Check if the response is not successful
-        if (response.status !== 201) {
-            console.log("masuk sini");
-
-            const errorMessage = await response.text();
-            console.error("API error response:", errorMessage);
-            return {
-                status: response.status,
-                response: {
-                    message: errorMessage,
-                },
-            };
-        }
 
         return {
             status: response.status,
@@ -53,16 +58,6 @@ export default defineEventHandler(async (event) => {
         };
     } catch (error) {
         console.log("masuk sini");
-
-        // Check if the error is a timeout error
-        if (error.message === 'Request timed out') {
-            return {
-                status: 408, // Request Timeout
-                response: {
-                    message: "The request timed out. Please try again later.",
-                },
-            };
-        }
 
         console.error("An unexpected error occurred:", error);
         return {
