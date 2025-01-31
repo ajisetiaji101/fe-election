@@ -1,12 +1,11 @@
 export default defineEventHandler(async (event) => {
 
-    const runtimeConfig = useRuntimeConfig().public;
     const body = await readBody(event)
 
     //generate timestamp
     const timestamp = new Date().getTime()
 
-    const response = await fetch(`${runtimeConfig.hit_server}/pemilihByNik`, {
+    const response = await fetch(`http://localhost:8081/pemilihByNik`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

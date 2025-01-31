@@ -1,9 +1,8 @@
 export default defineEventHandler(async (event) => {
     //generate timestamp
     const timestamp = new Date().getTime()
-    const runtimeConfig = useRuntimeConfig().public;
 
-    const response = await fetch(`${runtimeConfig.hit_server}/timeopenvote`, {
+    const response = await fetch(`http://localhost:8081/timeopenvote`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',

@@ -1,14 +1,13 @@
 export default defineEventHandler(async (event) => {
     try {
 
-        const runtimeConfig = useRuntimeConfig().public;
         const body = await readBody(event);
 
         // Generate a unique timestamp for idempotency
         const timestamp = Date.now();
 
         // Define the API endpoint (configurable for different environments)
-        const API_URL = process.env.API_URL || `${runtimeConfig.hit_server}/votes`;
+        const API_URL = `http://localhost:8081/votes`;
 
         // Send POST request to the external API
         const response = await fetch(API_URL, {

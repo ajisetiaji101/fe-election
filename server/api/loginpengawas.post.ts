@@ -8,10 +8,7 @@ export default defineEventHandler(async (event) => {
     //generate timestamp
     const timestamp = new Date().getTime()
 
-    console.log("runtimeConfig.hit_server", runtimeConfig.hit_server);
-
-
-    const response = await fetch(`${runtimeConfig.hit_server}/login`, {
+    const response = await fetch(`http://localhost:8081/login`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

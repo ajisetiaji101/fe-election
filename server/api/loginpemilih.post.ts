@@ -1,7 +1,5 @@
 export default defineEventHandler(async (event) => {
 
-    const runtimeConfig = useRuntimeConfig().public;
-
     try {
         // Parse form data from the request
         const body = await readMultipartFormData(event);
@@ -34,7 +32,7 @@ export default defineEventHandler(async (event) => {
         const timestamp = Date.now();
 
         // Define the API endpoint (configurable for different environments)
-        const API_URL = process.env.API_URL || `${runtimeConfig.hit_server}/pemilih`;
+        const API_URL = `http://localhost:8081/pemilih`;
 
         // Send POST request to the external API
         const response = await fetch(API_URL, {
