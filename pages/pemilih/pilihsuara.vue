@@ -6,7 +6,7 @@
                 <p class="text-black text-lg mb-6">Silahkan pilih sesuai hak suara anda!</p>
                 <div class="flex justify-around w-full max-w-4xl">
                     <div v-for="kandidat in kandidats" class="flex flex-col items-center justify-center space-y-4">
-                        <img :src="kandidat.Foto" alt="Gambar Pemilih" class="w-24 h-24 rounded-full object-cover" />
+                        <img src="~/assets/logo/logopejabat.png" alt="Gambar Pemilih" class="w-24 object-cover" />
                         <h1 class="text-lg font-semibold text-black">{{ kandidat.GubernurName }}</h1>
                         <h1 class="text-lg font-semibold text-black">{{ kandidat.WakilGubernurName }}</h1>
                         <h2 class="text-md font-semibold text-black">{{ kandidat.Visi }}</h2>

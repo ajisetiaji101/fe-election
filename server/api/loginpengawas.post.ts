@@ -1,12 +1,17 @@
 import log from '../middleware/log'
 
 export default defineEventHandler(async (event) => {
+
+    const runtimeConfig = useRuntimeConfig().public;
     const body = await readBody(event)
 
     //generate timestamp
     const timestamp = new Date().getTime()
 
-    const response = await fetch('http://localhost:8081/login', {
+    console.log("runtimeConfig.hit_server", runtimeConfig.hit_server);
+
+
+    const response = await fetch(`${runtimeConfig.hit_server}/login`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
